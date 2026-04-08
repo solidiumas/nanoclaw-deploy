@@ -18,9 +18,9 @@ systemctl enable docker
 # Fix permissions
 usermod -aG docker $USER
 
-# Clone repo
+# Clone repo (FIXED)
 cd /root
-git clone https://github.com/YOUR_USERNAME/nanoclaw-deploy.git
+git clone https://github.com/solidiumas/nanoclaw-deploy.git
 cd nanoclaw-deploy
 
 # Setup env
