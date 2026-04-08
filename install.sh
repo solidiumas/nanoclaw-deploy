@@ -1,91 +1,37 @@
 #!/bin/bash
 
-# --- CHECK KERNEL ---
-CURRENT_KERNEL=$(uname -r)
+# Farger for terminal-output
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
-echo "🧠 Kernel check: $CURRENT_KERNEL"
+echo -e "${GREEN}🚀 Starter NanoClaw-installasjon...${NC}"
 
-if [[ "$CURRENT_KERNEL" != *"6.8.0-107"* ]]; then
-  echo "⚠️ Kernel outdated."
-  echo "🔁 Rebooting automatically..."
-  sleep 3
-  reboot
-  exit 0
-fi
-
-set -e
-
-echo "🚀 Starting NanoClaw installation..."
-
-REPO_URL="https://github.com/solidiumas/nanoclaw-deploy.git"
-DEPLOY_DIR="/root/nanoclaw-deploy"
-NANOCLAW_DIR="/root/nanoclaw"
-
-# --- UPDATE ---
-echo "📦 Updating system..."
-apt update -y
-
-# --- FIX DOCKER CONFLICT (CRITICAL) ---
-echo "🧹 Removing containerd conflicts..."
-apt-get remove -y containerd containerd.io docker docker-engine docker.io || true
-apt-get purge -y containerd containerd.io || true
-apt-get autoremove -y
-
-# --- CLEAN CACHE ---
-apt-get clean
-
-# --- INSTALL DOCKER (SAFE) ---
-echo "🐳 Installing Docker..."
-apt-get install -y docker.io docker-compose git curl
-
-# --- START DOCKER ---
-systemctl enable docker
-systemctl start docker
-
-# --- VERIFY ---
-docker --version || (echo "❌ Docker install failed" && exit 1)
-
-# --- PERMISSIONS ---
-chmod 666 /var/run/docker.sock || true
-
-# --- CLONE DEPLOY REPO ---
-echo "📥 Cloning deploy repo..."
-if [ ! -d "$DEPLOY_DIR" ]; then
-  git clone $REPO_URL $DEPLOY_DIR
+# 1. Sjekk for Docker og installer hvis det mangler
+if ! [ -x "$(command -v docker)" ]; then
+    echo "📦 Installerer Docker..."
+    curl -fsSL https://get.docker.com | sh
+    systemctl enable --now docker
 else
-  cd $DEPLOY_DIR && git pull
+    echo "✅ Docker er allerede installert."
 fi
 
-cd $DEPLOY_DIR
-
-# --- ENV ---
-if [ ! -f ".env" ]; then
-  cp .env.example .env
-  echo "⚠️ SET YOUR API KEY:"
-  echo "nano $DEPLOY_DIR/.env"
-  sleep 10
+# 2. Sjekk for Docker Compose (V2 er inkludert i nyere Docker-installs)
+if ! docker compose version > /dev/null 2>&1; then
+    echo "📦 Installerer Docker Compose plugin..."
+    apt-get update && apt-get install -y docker-compose-plugin
 fi
 
-# --- CLONE NANOCLAW ---
-echo "📥 Cloning NanoClaw..."
-if [ ! -d "$NANOCLAW_DIR" ]; then
-  git clone https://github.com/qwibitai/nanoclaw.git $NANOCLAW_DIR
-fi
+# 3. Opprett mappe og last ned docker-compose.yml
+echo "📂 Klargjør filer..."
+mkdir -p nanoclaw
+cd nanoclaw
 
-# --- BUILD AGENT ---
-echo "🏗️ Building agent container..."
-cd $NANOCLAW_DIR/container
-docker build -t nanoclaw-agent:latest .
+# Last ned selve compose-filen fra repoet ditt
+curl -sSL https://raw.githubusercontent.com/solidiumas/nanoclaw-deploy/main/docker-compose.yml -o docker-compose.yml
 
-# --- START ---
-echo "🚀 Starting NanoClaw..."
-cd $DEPLOY_DIR
-docker-compose up -d --build
+# 4. Start NanoClaw
+echo -e "${GREEN}🐳 Starter containere med Docker Compose...${NC}"
+docker compose up -d
 
-# --- STATUS ---
-sleep 5
-docker ps
-
-echo ""
-echo "✅ DONE"
-echo "👉 http://$(curl -s ifconfig.me):3000"
+echo -e "${GREEN}✨ Installasjonen er fullført!${NC}"
+echo "Du kan nå få tilgang til NanoClaw på serverens IP-adresse."
