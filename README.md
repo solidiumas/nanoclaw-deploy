@@ -4,4 +4,4 @@ One-click Deploy for NanoClaw
 ## Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/nanoclaw-deploy/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/solidiumas/nanoclaw-deploy/main/install.sh | bash
