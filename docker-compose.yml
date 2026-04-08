@@ -5,6 +5,9 @@ services:
     restart: always
     ports:
       - "80:80"
+    # Gir appen tilgang til Docker på hosten hvis den skal styre containere
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - nanoclaw_network
 
@@ -12,7 +15,7 @@ services:
     image: ghcr.io/solidiumas/nanoclaw-agent:latest
     container_name: nanoclaw_agent
     restart: always
-    privileged: true # Agenter trenger ofte ekstra rettigheter
+    privileged: true
     networks:
       - nanoclaw_network
 
