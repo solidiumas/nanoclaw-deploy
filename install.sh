@@ -2,42 +2,82 @@
 
 set -e
 
-echo "🚀 Installing NanoClaw..."
+echo "🚀 Starting NanoClaw installation..."
 
-# Update system
-apt update -y
-apt upgrade -y
+# --- VARIABLES ---
+REPO_URL="https://github.com/solidiumas/nanoclaw-deploy.git"
+NANOCLAW_DIR="/root/nanoclaw"
+DEPLOY_DIR="/root/nanoclaw-deploy"
 
-# Install dependencies
+# --- UPDATE SYSTEM ---
+echo "📦 Updating system..."
+apt update -y && apt upgrade -y
+
+# --- INSTALL DEPENDENCIES ---
+echo "🔧 Installing dependencies..."
 apt install -y docker.io docker-compose git curl
 
-# Start docker
-systemctl start docker
+# --- START DOCKER ---
+echo "🐳 Starting Docker..."
 systemctl enable docker
+systemctl start docker
 
-# Fix permissions
-usermod -aG docker $USER
+# --- FIX DOCKER PERMISSIONS ---
+echo "🔐 Setting Docker permissions..."
+chmod 666 /var/run/docker.sock || true
 
-# Clone repo (FIXED)
-cd /root
-git clone https://github.com/solidiumas/nanoclaw-deploy.git
-cd nanoclaw-deploy
+# --- CLONE DEPLOY REPO ---
+echo "📥 Cloning deploy repo..."
+if [ ! -d "$DEPLOY_DIR" ]; then
+  git clone $REPO_URL $DEPLOY_DIR
+else
+  echo "Repo already exists, pulling latest..."
+  cd $DEPLOY_DIR
+  git pull
+fi
 
-# Setup env
-cp .env.example .env
-echo "👉 Edit your .env file:"
-echo "nano .env"
-sleep 5
+cd $DEPLOY_DIR
 
-# Build agent container manually (CRITICAL STEP)
-cd /root
-git clone https://github.com/qwibitai/nanoclaw.git || true
-cd nanoclaw/container
+# --- SETUP ENV ---
+if [ ! -f ".env" ]; then
+  echo "⚙️ Creating .env file..."
+  cp .env.example .env
+  echo "⚠️ IMPORTANT: Edit your API key now!"
+  echo "Run: nano $DEPLOY_DIR/.env"
+  sleep 10
+else
+  echo ".env already exists"
+fi
+
+# --- CLONE NANOCLAW CORE ---
+echo "📥 Cloning NanoClaw core..."
+if [ ! -d "$NANOCLAW_DIR" ]; then
+  git clone https://github.com/qwibitai/nanoclaw.git $NANOCLAW_DIR
+else
+  echo "NanoClaw already exists, skipping clone"
+fi
+
+# --- BUILD AGENT CONTAINER ---
+echo "🏗️ Building agent container..."
+cd $NANOCLAW_DIR/container
 docker build -t nanoclaw-agent:latest .
 
-# Start services
-cd /root/nanoclaw-deploy
+# --- START SERVICES ---
+echo "🚀 Starting NanoClaw services..."
+cd $DEPLOY_DIR
 docker-compose up -d --build
 
-echo "✅ NanoClaw installed!"
-echo "👉 Access: http://YOUR_SERVER_IP:3000"
+# --- WAIT & CHECK ---
+sleep 5
+
+echo "🔍 Checking container status..."
+docker ps | grep nanoclaw || echo "⚠️ NanoClaw container not detected"
+
+# --- DONE ---
+echo ""
+echo "✅ INSTALLATION COMPLETE"
+echo "👉 Open in browser: http://$(curl -s ifconfig.me):3000"
+echo ""
+echo "📌 If something failed:"
+echo "docker logs nanoclaw"
+echo ""
