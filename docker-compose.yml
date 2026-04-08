@@ -1,15 +1,8 @@
 services:
   nanoclaw-app:
-    image: solidiumas/nanoclaw:latest  # Bytt ut med ditt faktiske image-navn
+    image: ghcr.io/solidiumas/nanoclaw-deploy:latest
     container_name: nanoclaw_web
     restart: always
     ports:
       - "80:80"
-    environment:
-      - NODE_ENV=production
-    networks:
-      - nanoclaw_network
-
-networks:
-  nanoclaw_network:
-    driver: bridge
+    # Legg til env-filer eller volumes her hvis appen trenger det
