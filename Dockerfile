@@ -1,18 +1,13 @@
-FROM node:20
+# Eksempel for Node.js (juster til ditt faktiske miljø)
+FROM node:20-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y git
+COPY package*.json ./
+RUN npm install --production
 
-# Clone NanoClaw directly inside container
-RUN git clone https://github.com/qwibitai/nanoclaw.git .
+COPY . .
 
-# Install dependencies
-RUN npm install
-
-# Build agent container (CRITICAL)
-RUN cd container && docker build -t nanoclaw-agent:latest .
-
-EXPOSE 3000
+EXPOSE 80
 
 CMD ["npm", "start"]
