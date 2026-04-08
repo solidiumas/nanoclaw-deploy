@@ -1,0 +1,18 @@
+{
+  "name": "nanoclaw",
+  "version": "1.0.0",
+  "description": "NanoClaw management interface",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "dockerode": "^3.3.5",
+    "axios": "^1.3.4"
+  },
+  "author": "",
+  "license": "ISC"
+}
