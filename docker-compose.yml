@@ -1,8 +1,21 @@
 services:
   nanoclaw-app:
-    image: ghcr.io/solidiumas/nanoclaw-deploy:latest
+    image: ghcr.io/solidiumas/nanoclaw-app:latest
     container_name: nanoclaw_web
     restart: always
     ports:
       - "80:80"
-    # Legg til env-filer eller volumes her hvis appen trenger det
+    networks:
+      - nanoclaw_network
+
+  nanoclaw-agent:
+    image: ghcr.io/solidiumas/nanoclaw-agent:latest
+    container_name: nanoclaw_agent
+    restart: always
+    privileged: true # Agenter trenger ofte ekstra rettigheter
+    networks:
+      - nanoclaw_network
+
+networks:
+  nanoclaw_network:
+    driver: bridge
