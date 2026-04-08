@@ -1,16 +1,15 @@
-version: "3.9"
-
 services:
-  nanoclaw:
-    image: node:20
-    container_name: nanoclaw
-    working_dir: /app
-    volumes:
-      - /root/nanoclaw:/app
-      - /var/run/docker.sock:/var/run/docker.sock
-    env_file:
-      - .env
-    command: sh -c "npm install && npm start"
+  nanoclaw-app:
+    image: solidiumas/nanoclaw:latest  # Bytt ut med ditt faktiske image-navn
+    container_name: nanoclaw_web
+    restart: always
     ports:
-      - "3000:3000"
-    restart: unless-stopped
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - nanoclaw_network
+
+networks:
+  nanoclaw_network:
+    driver: bridge
